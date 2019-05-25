@@ -1,41 +1,141 @@
-boolean onGround; 
-float gravity = .3;
-float gWidth=50;
-float gHeight=20;
+String[] miscFiles = {"beaker.png", "desk.png"};
+PImage[] misc = new PImage[2];
+boolean jumping = false;
+Platform platform;
+int gridNumb=456;
+long t=0;
+Platform grid[] = new Platform[gridNumb];
+Boolean fill[] = new Boolean[gridNumb];
 
 void setup()
 {
+  t = millis();
   size(1400,400);
-  for (int i = 0; i < 3; i = i + 1)      
+  for (int i = 0; i < 2; i = i + 1)      
   {                             
     misc[i] = loadImage(miscFiles[i]);  
   }
-  for (int j = 0; j<4; j++)
-  {
-    jump[j] = loadImage(jumpFiles[j]);
-  }
-  for (int k = 0; k<5; k++)
-  {
-    melt[k] = loadImage(meltFiles[k]);   
+  for(int i=0;i<gridNumb;i++){
+    grid[i] = new Platform(" ");
+    int fillProb = int(random(0,100));
+    if(fillProb<25){
+      fill[i]=true;
+    }
+    else if(fillProb>=25){
+      fill[i]=false;
+    }
   }
 }
 
 void draw()
 {
+  float timer = (millis() - t) / 1000;
   background(174,234,255);
-  startingPlatform();
-  image(misc[2], width-268, height-109, 300, 150);  //desk position
-  image(misc[1], width-220, height-135, 90, 75);  //beaker position
-  image(misc[0], 5, 365, 30, 23);  //initial slime
-  platform();
+  platform = new Platform("startingPlatform");
+  image(misc[1], width-268, height-109, 300, 150);  //desk position
+  image(misc[0], width-220, height-135, 90, 75);  //beaker position
+  //image(misc[0], 5, 365, 30, 23);  //initial slime
+  
+  for(int count=0;count<gridNumb;count++){
+    grid[count].drawPlatform(fill[count]);
+  }
 }
 
-void startingPlatform(){
-  stroke(126); //color temp
-  fill(126);  //color temp
-  rect(0,height-80,150,80,0,10,0,0);
+class Player  {
+  String[] miscFiles = {"regular.png"};
+  String[] jumpFiles = {"jump1.png", "jump2.png", "jump3.png", "jump4.png"};
+  String[] meltFiles = {"melt1.png", "melt2.png", "melt3.png", "melt4.png", "melt5.png"}; 
+  PImage[] misc = new PImage[3];
+  PImage[] jump = new PImage[4];
+  PImage[] melt = new PImage[5];
+  boolean jumping = false;
+  float pX;
+  float pY;
+  float pVelocityY=0;
+  float pVelocityX=0;
+  float pSpeed = 6; 
+  float pJumpSpeed = -5;
+  boolean onGround; 
+  float gravity = .3; 
+  
+  void setup(){
+    for (int i = 0; i < 1; i = i + 1) {                             
+      misc[i] = loadImage(miscFiles[i]);
+    }
+    for (int j = 0; j<4; j++) {
+      jump[j] = loadImage(jumpFiles[j]);
+    }
+    for (int k = 0; k<5; k++) {
+      melt[k] = loadImage(meltFiles[k]);  
+    }
+  }
+  
+  Player() {
+      
+  }
+
+  
+  void keyPressed(){
+    if(key=='a'||key=='A'||keyCode==LEFT){
+      pX-=pSpeed;
+    }
+    if(key=='d'||key=='D'||keyCode==RIGHT){
+      pX+=pSpeed;
+    }
+    if(key==' '||key=='w'||key=='W'){
+      if(onGround==true){
+        jump();
+      }
+    }
+  }
+  
+  void jump(){
+    
+  }
 }
 
-void platform(){
-  rect(0,0,gWidth,gHeight);
+class Platform  {
+  float xpos;
+  float ypos;
+  float gWidth;
+  float gHeight;
+  float r;
+  float g;
+  float b;
+  int gridT=0;
+  int gridB=height-20;
+  int gridL=155;
+  int gridR=width-275;
+    
+  Platform(String type){
+    if(type=="startingPlatform"){
+      stroke(126); //color temp
+      fill(126);  //color temp
+      rect(0,height-80,150,80,0,10,0,0);
+    }
+    else{
+      gWidth=41;
+      gHeight=20;
+      r = random(0,255) / 2f + 0.5; //random colors
+      g = random(0,255) / 2f + 0.5;
+      b = random(0,230) / 2f + 0.5;
+      xpos=0;
+      ypos=0;
+    }
+  }
+  
+  void drawPlatform(Boolean drawProb){
+    Boolean drawP = drawProb;
+    for(int collumn=0;collumn<24;collumn++){
+      for(int row=0;row<19;row++){
+        
+        if(drawP==true){
+          
+          fill(r,g,b);
+          rect(collumn*gWidth+gridL,row*gHeight+gridT,gWidth,gHeight);
+          
+        }
+      }
+    }
+  }
 }
