@@ -1,0 +1,41 @@
+boolean onGround; 
+float gravity = .3;
+float gWidth=50;
+float gHeight=20;
+
+void setup()
+{
+  size(1400,400);
+  for (int i = 0; i < 3; i = i + 1)      
+  {                             
+    misc[i] = loadImage(miscFiles[i]);  
+  }
+  for (int j = 0; j<4; j++)
+  {
+    jump[j] = loadImage(jumpFiles[j]);
+  }
+  for (int k = 0; k<5; k++)
+  {
+    melt[k] = loadImage(meltFiles[k]);   
+  }
+}
+
+void draw()
+{
+  background(174,234,255);
+  startingPlatform();
+  image(misc[2], width-268, height-109, 300, 150);  //desk position
+  image(misc[1], width-220, height-135, 90, 75);  //beaker position
+  image(misc[0], 5, 365, 30, 23);  //initial slime
+  platform();
+}
+
+void startingPlatform(){
+  stroke(126); //color temp
+  fill(126);  //color temp
+  rect(0,height-80,150,80,0,10,0,0);
+}
+
+void platform(){
+  rect(0,0,gWidth,gHeight);
+}
