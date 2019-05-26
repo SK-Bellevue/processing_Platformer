@@ -1,0 +1,244 @@
+String[] environmentFiles = {"beaker.png", "desk.png"};
+PImage[] misc = new PImage[3];
+
+Platform platform;
+int gridNumb=312;
+long t=0;
+Platform grid[] = new Platform[gridNumb];
+Boolean fillTile[] = new Boolean[gridNumb];
+
+final int SPD=4;
+String direction = "right";
+final int dX=27,dY=20;
+Player player;
+
+void setup()
+{
+  t = millis();
+  size(1400,400);
+  
+  for (int i = 0; i < 2; i = i + 1) {                             
+    misc[i] = loadImage(environmentFiles[i]);
+  }
+  
+  for(int i=0;i<gridNumb;i++){
+    grid[i] = new Platform(" ");
+    
+    int fillProb = int(random(0,100));
+    if(fillProb<20){
+      fillTile[i]=true;
+    }
+    else if(fillProb>=20){
+      fillTile[i]=false;
+    }
+  }
+  
+  player = new Player(380, 99, SPD, dX, dY);
+  player.playerImageSetup();
+}
+
+void draw()
+{
+  background(174,234,255);
+  
+  platform = new Platform("startingPlatform");
+  image(misc[1], width-268, height-109, 300, 150);  //desk position
+  image(misc[0], width-220, height-135, 90, 75);  //beaker position
+  
+  for(int count=0;count<gridNumb;count++){
+    grid[count].drawPlatform(fillTile[count],count%24,count/24); //needs fix
+  }
+  
+  player.move();
+  player.display();
+}
+void keyPressed() {
+  player.setXMove(keyCode, true);
+}
+ 
+void keyReleased() {
+  player.setXMove(keyCode, false);
+}
+
+class Player  {
+  String[] idleFiles = {"regular.png", "regularRight.png"};
+  String[] jumpFiles = {"jump1.png", "jump2.png", "jump3.png", "jump4.png"};
+  String[] meltFiles = {"melt1.png", "melt2.png", "melt3.png", "melt4.png", "melt5.png"}; 
+  PImage[] idle = new PImage[2];
+  PImage[] jump = new PImage[4];
+  PImage[] melt = new PImage[5];
+  
+  float pX=0;
+  float pY=0;
+  final int v,dX,dY;
+  boolean isLeft, isRight, isJump;
+  
+  boolean onGround;
+  float gravity = 0.3;
+  float playerVelocityY = 0;
+  float playerVelocityX = 0;
+  float playerJumpSpeed = -4.1;
+  
+  Player(int xx, int yy, int vv, int ddX, int ddY) {
+    
+    pX=xx;
+    pY=yy;
+    v=vv;
+    playerVelocityX=vv;
+    dX=ddX;
+    dY=ddY;
+  }
+  void playerImageSetup(){
+    for (int i = 0; i<2; i++){
+      idle[i] = loadImage(idleFiles[i]);
+    }
+    for (int j = 0; j<4; j++) {
+      jump[j] = loadImage(jumpFiles[j]);
+    }
+    for (int k = 0; k<5; k++) {
+      melt[k] = loadImage(meltFiles[k]);  
+    }
+  }
+  
+  void display() {
+    image(idle[1], pX, pY, dX, dY);
+  }
+ 
+  /*void move() {
+    playerVelocityY += gravity;
+    pX = constrain(pX + v*(int(isRight) - int(isLeft)), 0, width  - dX);
+    //pY += playerVelocityY
+  }*/
+  void move(){
+    playerVelocityX = v*(int(isRight) - int(isLeft));
+    playerVelocityY += gravity;
+
+    float nextX = pX + v*(int(isRight) - int(isLeft));
+    float nextY = pY + int(playerVelocityY);
+    fill(0);
+    
+    float px = nextX;
+    float py = pY;
+    int gX = platform.gridL;
+    int gY;
+    
+    boolean tempOnGround = false;
+    for (int i = 0; i < 13; i += 1) { 
+      for(int j = 0; j < 24; j++){
+        gX = j*int(platform.gWidth)+platform.gridL;
+        gY = i*int(platform.gHeight)+platform.gridT;
+        
+        if(fillTile[j+i*24]==true){
+          //text(gX + " " + gY,gX,gY);
+          if (isRectOverlapping(gX,gY, gX + platform.gWidth, gY + platform.gHeight, px, py, px + dX, py + dY) == true)
+          {
+            //text(gX + " " + gY,gX+i*50,gY);
+            // moving left and character is currently on the right side of the wall
+            if (playerVelocityX < 0 && px >= gX + platform.gWidth+2)
+            {
+              playerVelocityX = 0;
+            }
+            // moving right and character is currently on the left side of the wall
+            if (playerVelocityX > 0 && px < gX-2)
+            {
+              playerVelocityX = 0;
+            }
+          }
+          
+          px = pX;
+          py = nextY;
+          if (isRectOverlapping(gX, gY, gX + platform.gWidth, gY + platform.gHeight, px, py, px + dX, py + dY) == true)
+          {            
+             // moving up and character is currently on the bottom side of the wall
+             // commented out to jump up through platforms
+            if (playerVelocityY < 0  && pY >= gY)
+            {
+              playerVelocityY = 0;
+            }
+            // moving down and character is currently on the top side of the wall
+             if (playerVelocityY > 0 && pY < gY)
+            {
+              playerVelocityY = 0;
+              tempOnGround = true;
+            }
+          }
+        }
+      }
+    }
+    pX = constrain(pX+playerVelocityX,0,width-dX);
+    pY = constrain(pY+playerVelocityY,0,height-dY);
+    image(idle[1], pX, pY, dX, dY);
+    onGround = tempOnGround;
+  }
+  boolean setXMove(int k, boolean b) {
+    switch (k) {
+
+    case +'A':
+    case LEFT:
+    return isLeft = b;
+
+    case +'D':
+    case RIGHT:
+    return isRight = b;
+    
+    case +'W':
+    case UP:
+    if(b!=isJump){
+      playerVelocityY=playerJumpSpeed;
+      if(playerVelocityY==0){
+        return isJump = b;
+      }
+    }
+  
+    default:
+    return b;
+    }
+  }
+  boolean isRectOverlapping(float left, float top, float right, float bottom,
+                          float otherLeft, float otherTop, float otherRight, float otherBottom) {
+    return !(left > otherRight || right < otherLeft || top > otherBottom || bottom < otherTop);
+  }
+  void animation(){
+    
+  }
+}
+
+class Platform  {
+  float xpos;
+  float ypos;
+  float gWidth=41;
+  float gHeight=24;
+  int gridT=50;
+  int gridB=height-20;
+  int gridL=155;
+  int gridR=width-275;
+  boolean drawYes[] = new boolean[312];
+    
+  Platform(String type){
+    
+    
+    if(type=="startingPlatform"){
+      stroke(126); //color temp
+      fill(126);  //color temp
+      rect(0,height-80,150,80,0,10,0,0);
+    }
+    else{
+      gWidth=41;
+      gHeight=24;
+      
+      xpos=0;
+      ypos=0;
+    }
+  }
+  
+  void drawPlatform(Boolean drawProb, int x, int y){
+    Boolean drawP = drawProb;
+    drawYes[24*y+x]=drawP;
+    
+    if(drawP==true){
+          int fillColor = int(random(90,126));
+          fill(fillColor,150,150);
+          rect(x*gWidth+gridL,y*gHeight+gridT,gWidth,gHeight);
+    }
+  }
+}
